@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<application-configuration>
+  <setupStep>complete</setupStep>
+  <setupType>install.xml</setupType>
+  <buildNumber>665</buildNumber>
+  <properties>
+    <property name="crowd.server.id">\(.crowdServerId)</property>
+    <property name="hibernate.connection.datasource">java:comp/env/jdbc/CrowdDS</property>
+    <property name="hibernate.dialect">org.hibernate.dialect.MySQL5InnoDBDialect</property>
+    <property name="hibernate.setup">true</property>
+    <property name="license">\(.license)</property>
+  </properties>
+</application-configuration>

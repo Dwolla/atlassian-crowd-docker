@@ -1,0 +1,75 @@
+{
+  "project": "crowd",
+  "deployable_type": "ecs-service",
+  "instance_protocol": "https",
+  "environment_sizes": {
+    "Sandbox": {
+      "desired_instances": 1
+    },
+    "Admin": {
+      "desired_instances": 1
+    }
+  },
+  "task_definition": {
+    "container_definitions": [
+      {
+        "name": "crowd",
+        "image": "dwolla/atlassian-crowd:latest",
+        "cpu": 128,
+        "memory": 768,
+        "port_mappings": [
+          {
+            "name": "https",
+            "container_port": 8443,
+            "load_balanced": true
+          }
+        ],
+        "essential": true,
+        "environment": [
+          {
+            "name": "DATABASE_CONFIG_OBJECT",
+            "value": "s3://dwolla-secrets{{{bucket-variant}}}-{{{region}}}/databases/{{{environment}}}/crowd/crowduser.json"
+          },
+          {
+            "name": "CROWD_CONFIG_OBJECT",
+            "value": "s3://{{{code_bucket}}}/crowd/config.json"
+          },
+          {
+            "name": "CROWD_SECRETS_OBJECT",
+            "value": "s3://dwolla-secrets{{{bucket-variant}}}-{{{region}}}/crowd/{{{environment}}}/config.json"
+          },
+          {
+            "name": "CROWD_SERVER_URL",
+            "value": "crowd.dwolla.net"
+          },
+          {
+            "name": "CATALINA_OPTS",
+            "value": "-Xms512m -Xmx512m"
+          },
+          {
+            "name": "CROWD_TLS_SUBJ",
+            "value": "/C=US/ST=Iowa/L=Des Moines/O=Dwolla/CN=localhost/emailAddress=dev+crowd@dwolla.com"
+          }
+        ]
+      }
+    ]
+  },
+  "execution_policy_paths": [
+    "policies/database.json"
+  ],
+  "elb": {
+    "internet_facing": false,
+    "ssl_enabled": true,
+    "dns_service_name": "crowd",
+    "accessible_from_offices": true,
+    "health_check": {
+      "health_check_grace_period": 180,
+      "instance_path_to_health_check": "/crowd/",
+      "success_status_code": "200,302",
+      "interval": 61,
+      "timeout": 60,
+      "unhealthy_threshold": 10,
+      "healthy_threshold": 2
+    }
+  }
+}
