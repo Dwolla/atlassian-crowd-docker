@@ -33,6 +33,7 @@ COPY server.xml ${CATALINA_HOME}/conf/server.xml
 COPY crowd.cfg.tmpl /opt/crowd.cfg.tmpl
 COPY start.sh /opt/start.sh
 COPY jars/* ${CATALINA_HOME}/lib/
+COPY ROOT.war ${CATALINA_HOME}/webapps/ROOT.war
 
 ENTRYPOINT ["/opt/start.sh"]
 CMD ["run"]
