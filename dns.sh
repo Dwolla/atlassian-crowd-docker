@@ -18,15 +18,21 @@ IFS=$'\n\t'
 REGION="us-west-2"
 
 if [[ "$2" =~ sandbox ]]; then
-  HOSTED_ZONE_ID="Z1FQYDUTQ7H02U"
   CNAME_HOSTNAME="crowd.us-west-2.sandbox.dwolla.net"
+  PRIVATE_ZONE="false"
+  ZONE_NAME="us-west-2.sandbox.dwolla.net"
 elif [[ "$2" =~ prod ]]; then
-  HOSTED_ZONE_ID="Z2BK2FYSS544XB"
   CNAME_HOSTNAME="crowd.dwolla.net"
+  PRIVATE_ZONE="true"
+  ZONE_NAME="dwolla.net"
 else
   echo "second argument must be \`sandbox\` or \`prod\`" > /dev/stderr
   exit 51
 fi
+
+HOSTED_ZONE_ID=$(aws route53 list-hosted-zones-by-name \
+                     --dns-name ${ZONE_NAME} | \
+                     jq -r ".HostedZones | map(select(.Config.PrivateZone == $PRIVATE_ZONE)) | map(.Id) | .[0]")
 
 if [[ "$1" =~ create ]]; then
   ACTION="CREATE"
@@ -37,7 +43,7 @@ elif [[ "$1" =~ delete ]]; then
   COMMENT="remove ${CNAME_HOSTNAME} from ${HOSTED_ZONE_ID}"
   CNAME_TARGET=$(aws route53 list-resource-record-sets \
                      --region us-west-2 \
-                     --hosted-zone Z1FQYDUTQ7H02U | \
+                     --hosted-zone ${HOSTED_ZONE_ID} | \
                  jq -r ".ResourceRecordSets | map(select(.Name == \"${CNAME_HOSTNAME}.\")) | .[0].ResourceRecords | map(.Value) | .[0]")
 else
   echo "first argument must be \`create\` or \`delete\`" > /dev/stderr
