@@ -16,6 +16,8 @@ COPY redirector /opt/redirector
 
 RUN apk update && \
     apk add --update curl ca-certificates jq groff less python py-pip bash openssl openjdk8="$JAVA_ALPINE_VERSION" && \
+    curl https://www.digicert.com/CACerts/GTECyberTrustGlobalRoot.crt | openssl x509 -inform der -outform pem -out /usr/local/share/ca-certificates/GTECyberTrustGlobalRoot.crt && \
+    update-ca-certificates && \
     rm -rf ${CATALINA_HOME}/webapps/* && \
     mkdir -p ${CROWD_HOME} ${CROWD_INSTALL} ${CATALINA_HOME}/conf/Catalina/localhost && \
     cd /opt && \
