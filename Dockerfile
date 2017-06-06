@@ -7,7 +7,7 @@ ENV CROWD_HOME=/opt/crowd/home \
     CROWD_INSTALL=/opt/crowd/webapp \
     CROWD_USER=crowd \
     CROWD_GROUP=crowd \
-    CROWD_VERSION=2.11.1 \
+    CROWD_VERSION=2.12.0 \
     MYSQL_CONNECTOR_VERSION=5.1.39
 
 EXPOSE 8443
@@ -29,13 +29,13 @@ RUN apk update && \
     pip install --upgrade pip && \
     pip install awscli && \
     sed -i s_securerandom.source=file:/dev/random_securerandom.source=file:/dev/urandom_ $JAVA_HOME/lib/security/java.security && \
-    curl -vL "https://dl.bintray.com/sbt/native-packages/sbt/0.13.13/sbt-0.13.13.tgz" | \
+    curl -vL "https://dl.bintray.com/sbt/native-packages/sbt/0.13.15/sbt-0.13.15.tgz" | \
     gunzip | tar -x -C /usr/local && \
     cd /opt/redirector && \
-    /usr/local/sbt-launcher-packaging-0.13.13/bin/sbt clean test package && \
+    /usr/local/sbt/bin/sbt clean test package && \
     mkdir -p ${CATALINA_HOME}/webapps/ROOT && unzip -d ${CATALINA_HOME}/webapps/ROOT target/scala-2.11/*.war && \
     apk --purge -v del py-pip openjdk8 && \
-    rm -rf /var/cache/apk/* /opt/redirector /usr/local/sbt-launcher-packaging-0.13.13 /tmp/* /root/.ivy2/ /root/.sbt/ /root/.cache/
+    rm -rf /var/cache/apk/* /opt/redirector /usr/local/sbt /tmp/* /root/.ivy2/ /root/.sbt/ /root/.cache/
 
 COPY context.xml.tmpl /opt/context.xml.tmpl
 COPY server.xml ${CATALINA_HOME}/conf/server.xml
