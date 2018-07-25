@@ -1,4 +1,4 @@
-FROM tomcat:9.0-alpine
+FROM tomcat:9-jre8-alpine
 MAINTAINER Dwolla Engineering <dev+crowd@dwolla.com>
 
 LABEL org.label-schema.vcs-url="https://github.com/Dwolla/atlassian-crowd-docker"
