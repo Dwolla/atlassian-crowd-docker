@@ -1,57 +1,42 @@
 #!/usr/bin/env bash
 set -euo pipefail
 IFS=$'\n\t'
-
 aws s3 cp ${DATABASE_CONFIG_OBJECT} ${CROWD_HOME}/crowduser.json
 aws s3 cp ${CROWD_CONFIG_OBJECT} ${CROWD_HOME}/config.json
 
-if aws s3 ls ${CROWD_SECRETS_OBJECT} > /dev/null; then
-  aws s3 cp ${CROWD_SECRETS_OBJECT} ${CROWD_HOME}/config_secrets.json
-else
-  cat <<__CONFIG_SECRETS_END__ > ${CROWD_HOME}/config_secrets.json
-{
-  "application_password": ""
-}
-__CONFIG_SECRETS_END__
-fi
+# Exports for docker-entrypoint/launch.sh
+echo 'export CROWDDB_URL=mysql://$(jq -r '.crowd.host' < ${CROWD_HOME}/crowduser.json):$(jq -r '.crowd.port' < ${CROWD_HOME}/crowduser.json)/$(jq -r '.crowd.database' < ${CROWD_HOME}/crowduser.json)' >> /home/crowd/common.sh
+echo 'export CROWDDB_USER=$(jq -r '.crowd.user' < ${CROWD_HOME}/crowduser.json)' >> /home/crowd/common.sh
+echo 'export CROWDDB_PASSWORD=$(jq -r '.crowd.password' < ${CROWD_HOME}/crowduser.json)' >> /home/crowd/common.sh
 
-# Set up JNDI resources in Tomcat root context
-tmpl=$(cat /opt/context.xml.tmpl | sed 's_"_\\"_g')
-printf "\"%s\"" "$tmpl" | jq -r -f /dev/stdin ${CROWD_HOME}/crowduser.json > ${CATALINA_HOME}/conf/Catalina/localhost/crowd.xml
-
+mkdir -p ${CROWD_HOME}/shared
 tmpl=$(cat /opt/crowd.cfg.tmpl | sed 's_"_\\"_g')
-printf "\"%s\"" "$tmpl" | jq -r -f /dev/stdin ${CROWD_HOME}/config.json > ${CROWD_HOME}/crowd.cfg.xml
+printf "\"%s\"" "$tmpl" | jq -r -f /dev/stdin ${CROWD_HOME}/config.json > ${CROWD_HOME}/shared/crowd.cfg.xml
+chown -R crowd ${CROWD_HOME}/shared
 
-cat <<__PROPERTIES_END__ | xargs -0 printf "\"%s\"" | jq -r -f /dev/stdin ${CROWD_HOME}/config_secrets.json > ${CROWD_HOME}/crowd.properties
-session.lastvalidation=session.lastvalidation
-session.tokenkey=session.tokenkey
-crowd.server.url=https\\\://localhost:8443/crowd/services/
-application.login.url=https\\\://${CROWD_SERVER_URL}/crowd
-crowd.base.url=https\\\://${CROWD_SERVER_URL}/crowd/
-application.name=crowd
-http.timeout=30000
-session.isauthenticated=session.isauthenticated
-session.validationinterval=0
-application.password=\(.application_password)
-__PROPERTIES_END__
+mkdir -p /opt/crowd/apache-tomcat/conf/
+mv /opt/server.xml /opt/crowd/apache-tomcat/conf/
 
-cat <<__CROWD_INIT_END__ > ${CROWD_INSTALL}/WEB-INF/classes/crowd-init.properties
-crowd.home=${CROWD_HOME}
-__CROWD_INIT_END__
+# Add Redirect from / to /crowd/
+mkdir -p /opt/crowd/apache-tomcat/webapps/ROOT
+echo '<% response.sendRedirect("/crowd/"); %>' > /opt/crowd/apache-tomcat/webapps/ROOT/index.jsp
+chown -R crowd:crowd /opt/crowd/
+
+sed -i 's/8095/8443/g' /opt/crowd/build.properties
 
 openssl req -x509 \
     -newkey rsa:4096 \
-    -keyout ${CATALINA_HOME}/conf/localhost-rsa-key.pem \
-    -out ${CATALINA_HOME}/conf/localhost-rsa-cert.pem \
+    -keyout /opt/crowd/apache-tomcat/conf/localhost-rsa-key.pem \
+    -out /opt/crowd/apache-tomcat/conf/localhost-rsa-cert.pem \
     -days 365 \
     -nodes \
     -subj "${CROWD_TLS_SUBJ}"
 
 keytool -import \
     -alias crowd \
-    -file $CATALINA_HOME/conf/localhost-rsa-cert.pem \
-    -keystore $JAVA_HOME/lib/security/cacerts \
+    -file /opt/crowd/apache-tomcat/conf/localhost-rsa-cert.pem \
+    -keystore $JAVA_HOME/jre/lib/security/cacerts \
     -storepass changeit \
     -noprompt
 
-exec ${CATALINA_HOME}/bin/catalina.sh $@
+exec /bin/tini -- /home/crowd/docker-entrypoint.sh crowd
