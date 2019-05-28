@@ -5,7 +5,7 @@
 
 Docker image with Atlassian Crowd, running on OpenJDK 8 / Alpine Linux with MySQL drivers.
 
-We use a fork of https://github.com/blacklabelops/crowd as our base image to add specific configurations - mainly enabling SSL on port 8443 and redirecting / to /crowd/ through tomcat.  This docker image builds off that and puts configuration specific data in the correct place to allow for an automated deployment of crowd.
+We use a fork of https://github.com/teamatldocker/crowd as our base image to add specific configurations - mainly enabling SSL on port 8443 and redirecting / to /crowd/ through tomcat.  This docker image builds off that and puts configuration specific data in the correct place to allow for an automated deployment of crowd.
 
 ## Required Environment Variables
 
@@ -25,7 +25,7 @@ Path to an S3 object (e.g. `s3://bucket/object.json`) structured as follows:
 }
 ```
 
-The credentials will be used by the upstream's base image [`launch.sh`](https://github.com/blacklabelops/crowd/blob/master/imagescripts/launch.sh) to create a JNDI resource at `jdbc/CrowdDS`
+The credentials will be used by the upstream's base image [`launch.sh`](https://github.com/teamatldocker/crowd/blob/master/imagescripts/launch.sh) to create a JNDI resource at `jdbc/CrowdDS`
 
 ### `CROWD_CONFIG_OBJECT`
 

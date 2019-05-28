@@ -1,4 +1,5 @@
-FROM blacklabelops/crowd:3.3.0
+FROM teamatldocker/crowd:3.3.5
+
 
 LABEL maintainer Dwolla Engineering <dev+crowd@dwolla.com>
 LABEL org.label-schema.vcs-url="https://github.com/Dwolla/atlassian-crowd-docker"
@@ -7,7 +8,7 @@ EXPOSE 8443
 
 RUN apk add --upgrade apk-tools && \
     apk add -U jq openssl python py-pip tomcat-native && \
-    curl https://www.digicert.com/CACerts/GTECyberTrustGlobalRoot.crt | openssl x509 -inform der -outform pem -out /usr/local/share/ca-certificates/GTECyberTrustGlobalRoot.crt && \
+    curl https://cacerts.digicert.com/GTECyberTrustGlobalRoot.crt | openssl x509 -inform der -outform pem -out /usr/local/share/ca-certificates/GTECyberTrustGlobalRoot.crt && \
     update-ca-certificates && \
     pip install --upgrade pip && \
     pip install awscli && \
