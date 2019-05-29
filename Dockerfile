@@ -7,7 +7,7 @@ LABEL org.label-schema.vcs-url="https://github.com/Dwolla/atlassian-crowd-docker
 EXPOSE 8443
 
 RUN apk add --upgrade apk-tools && \
-    apk add -U jq openssl python py-pip tomcat-native && \
+    apk add -U jq openssl python py-pip && \
     curl https://cacerts.digicert.com/GTECyberTrustGlobalRoot.crt | openssl x509 -inform der -outform pem -out /usr/local/share/ca-certificates/GTECyberTrustGlobalRoot.crt && \
     update-ca-certificates && \
     pip install --upgrade pip && \
