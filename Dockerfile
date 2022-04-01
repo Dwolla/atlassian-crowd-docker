@@ -1,6 +1,4 @@
-FROM teamatldocker/crowd:3.3.5
-
-
+FROM dwolla/teamatldocker-crowd
 LABEL maintainer Dwolla Engineering <dev+crowd@dwolla.com>
 LABEL org.label-schema.vcs-url="https://github.com/Dwolla/atlassian-crowd-docker"
 
